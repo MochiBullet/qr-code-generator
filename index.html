@@ -399,6 +399,42 @@
             font-size: 11px;
         }
         .footer a { color: var(--primary); text-decoration: none; }
+
+        /* Density indicator */
+        .density-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .density-track {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .density-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s, background 0.3s;
+        }
+        .density-label {
+            font-size: 10px;
+            font-family: monospace;
+            color: var(--text-dim);
+            white-space: nowrap;
+            min-width: 70px;
+        }
+        .density-hint {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
+            transition: color 0.3s;
+        }
+        .density-hint.warn { color: #ffc832; }
+        .density-hint.danger { color: #f66; }
+        .vcardOnly.hide { display: none; }
     </style>
 </head>
 <body>
@@ -415,6 +451,11 @@
                     <button class="btn" onclick="downloadSVGBtn()">📄 SVG</button>
                     <button class="btn" onclick="copyQR()">📋 Copy</button>
                 </div>
+                <div class="density-bar">
+                    <div class="density-track"><div class="density-fill" id="densityFill"></div></div>
+                    <span class="density-label" id="densityLabel">--</span>
+                </div>
+                <div class="density-hint" id="densityHint"></div>
             </div>
         </div>
     </div>
@@ -449,8 +490,15 @@
                 </div>
             </div>
 
-            <!-- Contact (vCard) -->
+            <!-- Contact -->
             <div class="tab-panel" id="panel-contact">
+                <div class="field">
+                    <label>フォーマット</label>
+                    <div class="pill-toggle" id="contactFormat">
+                        <button class="pill-opt active" data-fmt="mecard">MECARD（軽量）</button>
+                        <button class="pill-opt" data-fmt="vcard">vCard（詳細）</button>
+                    </div>
+                </div>
                 <div class="field">
                     <label>氏名</label>
                     <input type="text" id="vcName" placeholder="山田 太郎">
@@ -463,7 +511,7 @@
                     <label>メールアドレス</label>
                     <input type="email" id="vcEmail" placeholder="taro@example.com">
                 </div>
-                <div class="field">
+                <div class="field vcardOnly">
                     <label>会社名</label>
                     <input type="text" id="vcOrg" placeholder="株式会社サンプル">
                 </div>
@@ -471,7 +519,7 @@
                     <label>URL</label>
                     <input type="url" id="vcUrl" placeholder="https://example.com">
                 </div>
-                <div class="field">
+                <div class="field vcardOnly">
                     <label>住所</label>
                     <input type="text" id="vcAddr" placeholder="東京都渋谷区...">
                 </div>
@@ -626,9 +674,13 @@
         <div class="card">
             <div class="card-title">Size</div>
             <div class="field">
+                <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <input type="checkbox" id="autoSize" checked style="width:16px;height:16px;accent-color:var(--primary);">
+                    <span>自動サイズ調整（読み取り精度を維持）</span>
+                </label>
                 <label>出力サイズ</label>
                 <div class="range-row">
-                    <input type="range" id="qrSize" min="200" max="1000" step="50" value="400">
+                    <input type="range" id="qrSize" min="200" max="2000" step="50" value="400">
                     <span class="range-value" id="qrSizeVal">400</span>
                 </div>
             </div>
@@ -680,10 +732,17 @@
         const ctx = canvas.getContext('2d');
         const qrWrap = document.getElementById('qrWrap');
 
+        const densityFill = document.getElementById('densityFill');
+        const densityLabel = document.getElementById('densityLabel');
+        const densityHint = document.getElementById('densityHint');
+        const autoSizeCheck = document.getElementById('autoSize');
+
         let useGradient = false;
         let gradDirection = 'to-br';
         let logoImage = null;
         let activeTab = 'url';
+        let contactFmt = 'mecard';
+        const MIN_MODULE_PX = 6; // 最小ドットサイズ（px）
 
         // === Content Tabs ===
         document.getElementById('contentTabs').addEventListener('click', (e) => {
@@ -702,6 +761,24 @@
             el.addEventListener('input', generate);
         });
 
+        // Contact format toggle
+        document.getElementById('contactFormat').addEventListener('click', (e) => {
+            const btn = e.target.closest('.pill-opt');
+            if (!btn) return;
+            document.querySelectorAll('#contactFormat .pill-opt').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            contactFmt = btn.dataset.fmt;
+            document.querySelectorAll('.vcardOnly').forEach(el => {
+                el.classList.toggle('hide', contactFmt === 'mecard');
+            });
+            generate();
+        });
+        // Init: hide vcard-only fields
+        document.querySelectorAll('.vcardOnly').forEach(el => el.classList.add('hide'));
+
+        // Auto size checkbox
+        autoSizeCheck.addEventListener('change', generate);
+
         // Build QR text from active tab
         function getQRText() {
             switch (activeTab) {
@@ -717,15 +794,28 @@
                     const url = document.getElementById('vcUrl').value;
                     const addr = document.getElementById('vcAddr').value;
                     if (!name && !phone && !email) return ' ';
-                    let parts = ['BEGIN:VCARD', 'VERSION:3.0'];
-                    if (name) { parts.push('FN:' + name); parts.push('N:' + name.split(' ').reverse().join(';') + ';;;'); }
-                    if (phone) parts.push('TEL:' + phone);
-                    if (email) parts.push('EMAIL:' + email);
-                    if (org) parts.push('ORG:' + org);
-                    if (url) parts.push('URL:' + url);
-                    if (addr) parts.push('ADR:;;' + addr + ';;;;');
-                    parts.push('END:VCARD');
-                    return parts.join('\n');
+
+                    if (contactFmt === 'mecard') {
+                        // MECARD — compact format, widely supported
+                        let s = 'MECARD:';
+                        if (name) s += 'N:' + name + ';';
+                        if (phone) s += 'TEL:' + phone + ';';
+                        if (email) s += 'EMAIL:' + email + ';';
+                        if (url) s += 'URL:' + url + ';';
+                        s += ';';
+                        return s;
+                    } else {
+                        // vCard — full format
+                        let parts = ['BEGIN:VCARD', 'VERSION:3.0'];
+                        if (name) { parts.push('FN:' + name); parts.push('N:' + name.split(' ').reverse().join(';') + ';;;'); }
+                        if (phone) parts.push('TEL:' + phone);
+                        if (email) parts.push('EMAIL:' + email);
+                        if (org) parts.push('ORG:' + org);
+                        if (url) parts.push('URL:' + url);
+                        if (addr) parts.push('ADR:;;' + addr + ';;;;');
+                        parts.push('END:VCARD');
+                        return parts.join('\n');
+                    }
                 }
                 case 'wifi': {
                     const ssid = document.getElementById('wfSsid').value;
@@ -864,6 +954,34 @@
             }
         }
 
+        // === Density Indicator ===
+        function updateDensity(moduleCount, cellSize) {
+            const dotPx = cellSize.toFixed(1);
+            // Density 0-100%: version 1 has 21 modules, version 40 has 177
+            const pct = Math.min(100, Math.round(((moduleCount - 21) / (177 - 21)) * 100));
+            densityFill.style.width = pct + '%';
+
+            let color, hint;
+            if (cellSize >= 8) {
+                color = 'var(--accent-green)';
+                hint = '';
+            } else if (cellSize >= 5) {
+                color = '#ffc832';
+                hint = '情報量が多め — 印刷サイズに注意';
+                densityHint.className = 'density-hint warn';
+            } else {
+                color = '#f66';
+                hint = '高密度 — 大きく印刷するか情報を減らしてください';
+                densityHint.className = 'density-hint danger';
+            }
+            if (!hint) densityHint.className = 'density-hint';
+
+            densityFill.style.background = color;
+            densityLabel.textContent = moduleCount + 'mod / ' + dotPx + 'px';
+            densityLabel.style.color = color;
+            densityHint.textContent = hint;
+        }
+
         // === QR Generation ===
         function generate() {
             const text = getQRText();
@@ -887,10 +1005,24 @@
             if (!qr) return;
 
             const moduleCount = qr.getModuleCount();
-            const size = parseInt(qrSizeRange.value);
             const margin = parseInt(qrMarginRange.value);
             const totalModules = moduleCount + margin * 2;
+
+            // Auto-scale: ensure each module is at least MIN_MODULE_PX
+            let size = parseInt(qrSizeRange.value);
+            if (autoSizeCheck.checked) {
+                const minSize = totalModules * MIN_MODULE_PX;
+                if (size < minSize) {
+                    size = Math.min(minSize, 2000);
+                    qrSizeRange.value = size;
+                    qrSizeVal.textContent = size;
+                }
+            }
+
             const cellSize = size / totalModules;
+
+            // Update density indicator
+            updateDensity(moduleCount, cellSize);
 
             canvas.width = size;
             canvas.height = size;
