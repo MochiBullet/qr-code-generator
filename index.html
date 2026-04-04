@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #06080c;
+            --bg-card: #0d1117;
+            --border: rgba(255,255,255,0.06);
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --text-dim: #484f58;
+            --primary: #6C9CFF;
+            --accent-purple: #c084fc;
+            --accent-green: #4ade80;
+            --accent-cyan: #22d3ee;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Noise overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 0 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        /* Layout */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 640px) {
+            .main {
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+            }
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 16px;
+        }
+
+        /* Form elements */
+        .field { margin-bottom: 16px; }
+        .field:last-child { margin-bottom: 0; }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        input[type="text"], input[type="url"], select, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        select option { background: #161b22; }
+
+        /* Color inputs */
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="color"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            background: none;
+            padding: 2px;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
+
+        .color-hex {
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            outline: none;
+        }
+        .color-hex:focus { border-color: var(--primary); }
+
+        /* Gradient controls */
+        .gradient-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .toggle.active { background: var(--primary); }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .toggle.active::after { transform: translateX(20px); }
+
+        .gradient-colors {
+            display: none;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .gradient-colors.show { display: flex; }
+        .gradient-colors .color-col { flex: 1; }
+        .gradient-colors label { font-size: 11px; }
+
+        .direction-row {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .direction-row.show { display: flex; }
+        .dir-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        .dir-btn:hover { border-color: var(--text-dim); }
+        .dir-btn.active {
+            border-color: var(--primary);
+            background: rgba(108,156,255,0.1);
+            color: var(--primary);
+        }
+
+        /* Image upload */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            position: relative;
+        }
+        .upload-area:hover {
+            border-color: var(--text-dim);
+            background: rgba(255,255,255,0.02);
+        }
+        .upload-area.has-image {
+            border-color: var(--accent-green);
+            background: rgba(74,222,128,0.04);
+        }
+        .upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .upload-icon { font-size: 28px; margin-bottom: 6px; }
+        .upload-text { font-size: 12px; color: var(--text-dim); }
+        .upload-preview {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-bottom: 6px;
+        }
+        .remove-image {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 11px;
+            color: #f44;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+
+        /* Range slider */
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+        .range-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .range-row input[type="range"] { flex: 1; }
+        .range-value {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: monospace;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        /* Preview area */
+        .preview-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .qr-canvas-wrap {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            display: inline-block;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+        #qrCanvas {
+            display: block;
+            image-rendering: pixelated;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--text-dim);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            border: none;
+            color: #fff;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+            filter: brightness(1.1);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--accent-green);
+            color: #000;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            padding: 16px;
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>QR Code Generator</h1>
+            <p>カスタムカラー・グラデーション・ロゴ埋め込み対応</p>
+        </div>
+
+        <div class="main">
+            <!-- Left: Settings -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+                <!-- Content -->
+                <div class="card">
+                    <div class="card-title">Content</div>
+                    <div class="field">
+                        <label>テキスト / URL</label>
+                        <textarea id="qrText" placeholder="https://example.com">https://mochi-bullet-magazine.vercel.app/</textarea>
+                    </div>
+                    <div class="field">
+                        <label>誤り訂正レベル</label>
+                        <select id="ecLevel">
+                            <option value="L">L (7%) — 小さいQR</option>
+                            <option value="M" selected>M (15%) — 標準</option>
+                            <option value="Q">Q (25%) — ロゴ向き</option>
+                            <option value="H">H (30%) — 最高耐性</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Colors -->
+                <div class="card">
+                    <div class="card-title">Colors</div>
+
+                    <div class="field">
+                        <label>背景色</label>
+                        <div class="color-row">
+                            <input type="color" id="bgColor" value="#ffffff">
+                            <input type="text" class="color-hex" id="bgHex" value="#ffffff">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="gradient-toggle">
+                            <div class="toggle" id="gradToggle"></div>
+                            <label style="margin:0;cursor:pointer;" onclick="document.getElementById('gradToggle').click()">グラデーション</label>
+                        </div>
+
+                        <!-- Solid color -->
+                        <div id="solidColor">
+                            <label>QRコードの色</label>
+                            <div class="color-row">
+                                <input type="color" id="fgColor" value="#000000">
+                                <input type="text" class="color-hex" id="fgHex" value="#000000">
+                            </div>
+                        </div>
+
+                        <!-- Gradient colors -->
+                        <div class="gradient-colors" id="gradColors">
+                            <div class="color-col">
+                                <label>カラー 1</label>
+                                <div class="color-row">
+                                    <input type="color" id="grad1" value="#6C9CFF">
+                                    <input type="text" class="color-hex" id="grad1Hex" value="#6C9CFF">
+                                </div>
+                            </div>
+                            <div class="color-col">
+                                <label>カラー 2</label>
+                                <div class="color-row">
+                                    <input type="color" id="grad2" value="#c084fc">
+                                    <input type="text" class="color-hex" id="grad2Hex" value="#c084fc">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="direction-row" id="dirRow">
+                            <button class="dir-btn" data-dir="to-b" title="上→下">↓</button>
+                            <button class="dir-btn" data-dir="to-r" title="左→右">→</button>
+                            <button class="dir-btn active" data-dir="to-br" title="左上→右下">↘</button>
+                            <button class="dir-btn" data-dir="to-bl" title="右上→左下">↙</button>
+                            <button class="dir-btn" data-dir="radial" title="放射状">◎</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo -->
+                <div class="card">
+                    <div class="card-title">Logo</div>
+                    <div class="field">
+                        <div class="upload-area" id="uploadArea">
+                            <input type="file" id="logoInput" accept="image/*">
+                            <div id="uploadContent">
+                                <div class="upload-icon">🖼️</div>
+                                <div class="upload-text">タップして画像を選択</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>ロゴサイズ</label>
+                        <div class="range-row">
+                            <input type="range" id="logoSize" min="10" max="40" value="22">
+                            <span class="range-value" id="logoSizeVal">22%</span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>ロゴの角丸</label>
+                        <div class="range-row">
+                            <input type="range" id="logoRadius" min="0" max="50" value="8">
+                            <span class="range-value" id="logoRadiusVal">8px</span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>ロゴの余白</label>
+                        <div class="range-row">
+                            <input type="range" id="logoPadding" min="0" max="20" value="6">
+                            <span class="range-value" id="logoPaddingVal">6px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Size -->
+                <div class="card">
+                    <div class="card-title">Size</div>
+                    <div class="field">
+                        <label>出力サイズ</label>
+                        <div class="range-row">
+                            <input type="range" id="qrSize" min="200" max="1000" step="50" value="400">
+                            <span class="range-value" id="qrSizeVal">400</span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>余白（Quiet Zone）</label>
+                        <div class="range-row">
+                            <input type="range" id="qrMargin" min="0" max="4" value="2">
+                            <span class="range-value" id="qrMarginVal">2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Preview -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+                <div class="card" style="position:sticky;top:20px;">
+                    <div class="card-title">Preview</div>
+                    <div class="preview-wrapper">
+                        <div class="qr-canvas-wrap" id="qrWrap">
+                            <canvas id="qrCanvas" width="400" height="400"></canvas>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" onclick="downloadQR()">
+                                <span>📥</span> PNG保存
+                            </button>
+                            <button class="btn" onclick="downloadSVGBtn()">
+                                <span>📄</span> SVG
+                            </button>
+                            <button class="btn" onclick="copyQR()">
+                                <span>📋</span> コピー
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Made by <a href="https://mochi-bullet-magazine.vercel.app/" target="_blank">MochiBullet</a>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // === Elements ===
+        const qrText = document.getElementById('qrText');
+        const ecLevel = document.getElementById('ecLevel');
+        const bgColorInput = document.getElementById('bgColor');
+        const bgHexInput = document.getElementById('bgHex');
+        const fgColorInput = document.getElementById('fgColor');
+        const fgHexInput = document.getElementById('fgHex');
+        const grad1Input = document.getElementById('grad1');
+        const grad1HexInput = document.getElementById('grad1Hex');
+        const grad2Input = document.getElementById('grad2');
+        const grad2HexInput = document.getElementById('grad2Hex');
+        const gradToggle = document.getElementById('gradToggle');
+        const solidColor = document.getElementById('solidColor');
+        const gradColors = document.getElementById('gradColors');
+        const dirRow = document.getElementById('dirRow');
+        const logoInput = document.getElementById('logoInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadContent = document.getElementById('uploadContent');
+        const logoSizeRange = document.getElementById('logoSize');
+        const logoSizeVal = document.getElementById('logoSizeVal');
+        const logoRadiusRange = document.getElementById('logoRadius');
+        const logoRadiusVal = document.getElementById('logoRadiusVal');
+        const logoPaddingRange = document.getElementById('logoPadding');
+        const logoPaddingVal = document.getElementById('logoPaddingVal');
+        const qrSizeRange = document.getElementById('qrSize');
+        const qrSizeVal = document.getElementById('qrSizeVal');
+        const qrMarginRange = document.getElementById('qrMargin');
+        const qrMarginVal = document.getElementById('qrMarginVal');
+        const canvas = document.getElementById('qrCanvas');
+        const ctx = canvas.getContext('2d');
+        const qrWrap = document.getElementById('qrWrap');
+
+        let useGradient = false;
+        let gradDirection = 'to-br';
+        let logoImage = null;
+
+        // === Color sync ===
+        function syncColor(picker, hex) {
+            picker.addEventListener('input', () => { hex.value = picker.value; generate(); });
+            hex.addEventListener('input', () => {
+                let v = hex.value;
+                if (/^#[0-9a-fA-F]{6}$/.test(v)) { picker.value = v; generate(); }
+            });
+            hex.addEventListener('blur', () => { hex.value = picker.value; });
+        }
+        syncColor(bgColorInput, bgHexInput);
+        syncColor(fgColorInput, fgHexInput);
+        syncColor(grad1Input, grad1HexInput);
+        syncColor(grad2Input, grad2HexInput);
+
+        // === Gradient toggle ===
+        gradToggle.addEventListener('click', () => {
+            useGradient = !useGradient;
+            gradToggle.classList.toggle('active', useGradient);
+            solidColor.style.display = useGradient ? 'none' : 'block';
+            gradColors.classList.toggle('show', useGradient);
+            dirRow.classList.toggle('show', useGradient);
+            generate();
+        });
+
+        // === Direction buttons ===
+        dirRow.querySelectorAll('.dir-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                dirRow.querySelector('.active')?.classList.remove('active');
+                btn.classList.add('active');
+                gradDirection = btn.dataset.dir;
+                generate();
+            });
+        });
+
+        // === Logo upload ===
+        logoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    logoImage = img;
+                    uploadArea.classList.add('has-image');
+                    uploadContent.innerHTML = `
+                        <img src="${ev.target.result}" class="upload-preview">
+                        <div class="upload-text">${file.name}</div>
+                        <button class="remove-image" onclick="removeLogo(event)">× 削除</button>
+                    `;
+                    // Auto-raise error correction for logo
+                    if (ecLevel.value === 'L' || ecLevel.value === 'M') {
+                        ecLevel.value = 'Q';
+                    }
+                    generate();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function removeLogo(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            logoImage = null;
+            logoInput.value = '';
+            uploadArea.classList.remove('has-image');
+            uploadContent.innerHTML = `
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-text">タップして画像を選択</div>
+            `;
+            generate();
+        }
+
+        // === Range sliders ===
+        logoSizeRange.addEventListener('input', () => { logoSizeVal.textContent = logoSizeRange.value + '%'; generate(); });
+        logoRadiusRange.addEventListener('input', () => { logoRadiusVal.textContent = logoRadiusRange.value + 'px'; generate(); });
+        logoPaddingRange.addEventListener('input', () => { logoPaddingVal.textContent = logoPaddingRange.value + 'px'; generate(); });
+        qrSizeRange.addEventListener('input', () => { qrSizeVal.textContent = qrSizeRange.value; generate(); });
+        qrMarginRange.addEventListener('input', () => { qrMarginVal.textContent = qrMarginRange.value; generate(); });
+
+        // === Auto-generate on input ===
+        qrText.addEventListener('input', generate);
+        ecLevel.addEventListener('change', generate);
+
+        // === QR Generation ===
+        function generate() {
+            const text = qrText.value || ' ';
+            const ecMap = { L: 1, M: 0, Q: 3, H: 2 }; // qrcode-generator uses 0=M,1=L,2=H,3=Q
+            const ec = ecMap[ecLevel.value];
+
+            // Auto type number (0 = auto)
+            let qr;
+            try {
+                qr = qrcode(0, ec);
+                qr.addData(text);
+                qr.make();
+            } catch (e) {
+                // If auto fails, try higher versions
+                for (let v = 5; v <= 40; v++) {
+                    try {
+                        qr = qrcode(v, ec);
+                        qr.addData(text);
+                        qr.make();
+                        break;
+                    } catch (e2) { continue; }
+                }
+            }
+
+            if (!qr) return;
+
+            const moduleCount = qr.getModuleCount();
+            const size = parseInt(qrSizeRange.value);
+            const margin = parseInt(qrMarginRange.value);
+            const totalModules = moduleCount + margin * 2;
+            const cellSize = size / totalModules;
+
+            canvas.width = size;
+            canvas.height = size;
+
+            // Background
+            ctx.fillStyle = bgColorInput.value;
+            ctx.fillRect(0, 0, size, size);
+
+            // Prepare gradient or solid
+            let fillStyle;
+            if (useGradient) {
+                const c1 = grad1Input.value;
+                const c2 = grad2Input.value;
+                let grad;
+                if (gradDirection === 'radial') {
+                    grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size * 0.7);
+                } else {
+                    const coords = {
+                        'to-b': [size/2, 0, size/2, size],
+                        'to-r': [0, size/2, size, size/2],
+                        'to-br': [0, 0, size, size],
+                        'to-bl': [size, 0, 0, size]
+                    };
+                    const c = coords[gradDirection];
+                    grad = ctx.createLinearGradient(c[0], c[1], c[2], c[3]);
+                }
+                grad.addColorStop(0, c1);
+                grad.addColorStop(1, c2);
+                fillStyle = grad;
+            } else {
+                fillStyle = fgColorInput.value;
+            }
+
+            ctx.fillStyle = fillStyle;
+
+            // Draw modules
+            for (let row = 0; row < moduleCount; row++) {
+                for (let col = 0; col < moduleCount; col++) {
+                    if (qr.isDark(row, col)) {
+                        const x = (col + margin) * cellSize;
+                        const y = (row + margin) * cellSize;
+                        ctx.fillRect(x, y, Math.ceil(cellSize), Math.ceil(cellSize));
+                    }
+                }
+            }
+
+            // Draw logo
+            if (logoImage) {
+                const logoPercent = parseInt(logoSizeRange.value) / 100;
+                const logoDrawSize = size * logoPercent;
+                const padding = parseInt(logoPaddingRange.value);
+                const radius = parseInt(logoRadiusRange.value);
+                const lx = (size - logoDrawSize) / 2;
+                const ly = (size - logoDrawSize) / 2;
+
+                // White background behind logo
+                const bgX = lx - padding;
+                const bgY = ly - padding;
+                const bgW = logoDrawSize + padding * 2;
+                const bgH = logoDrawSize + padding * 2;
+
+                ctx.fillStyle = bgColorInput.value;
+                roundRect(ctx, bgX, bgY, bgW, bgH, radius + padding / 2);
+                ctx.fill();
+
+                // Clip and draw logo
+                ctx.save();
+                roundRect(ctx, lx, ly, logoDrawSize, logoDrawSize, radius);
+                ctx.clip();
+                ctx.drawImage(logoImage, lx, ly, logoDrawSize, logoDrawSize);
+                ctx.restore();
+            }
+
+            // Update wrap background
+            qrWrap.style.background = bgColorInput.value;
+
+            // Store qr data for SVG export
+            canvas._qrData = { qr, moduleCount, margin, size };
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        // === Download PNG ===
+        function downloadQR() {
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('PNGをダウンロードしました');
+        }
+
+        // === Download SVG ===
+        function downloadSVGBtn() {
+            const data = canvas._qrData;
+            if (!data) return;
+            const { qr, moduleCount, margin, size } = data;
+            const totalModules = moduleCount + margin * 2;
+            const cellSize = size / totalModules;
+
+            let rects = '';
+            const fgCol = useGradient ? 'url(#grad)' : fgColorInput.value;
+
+            for (let row = 0; row < moduleCount; row++) {
+                for (let col = 0; col < moduleCount; col++) {
+                    if (qr.isDark(row, col)) {
+                        const x = ((col + margin) * cellSize).toFixed(2);
+                        const y = ((row + margin) * cellSize).toFixed(2);
+                        const cs = Math.ceil(cellSize);
+                        rects += `<rect x="${x}" y="${y}" width="${cs}" height="${cs}" fill="${fgCol}"/>`;
+                    }
+                }
+            }
+
+            let gradDef = '';
+            if (useGradient) {
+                const c1 = grad1Input.value;
+                const c2 = grad2Input.value;
+                if (gradDirection === 'radial') {
+                    gradDef = `<defs><radialGradient id="grad" cx="50%" cy="50%" r="70%"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></radialGradient></defs>`;
+                } else {
+                    const coords = {
+                        'to-b': { x1: '50%', y1: '0%', x2: '50%', y2: '100%' },
+                        'to-r': { x1: '0%', y1: '50%', x2: '100%', y2: '50%' },
+                        'to-br': { x1: '0%', y1: '0%', x2: '100%', y2: '100%' },
+                        'to-bl': { x1: '100%', y1: '0%', x2: '0%', y2: '100%' }
+                    };
+                    const c = coords[gradDirection];
+                    gradDef = `<defs><linearGradient id="grad" x1="${c.x1}" y1="${c.y1}" x2="${c.x2}" y2="${c.y2}"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient></defs>`;
+                }
+            }
+
+            const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+${gradDef}
+<rect width="${size}" height="${size}" fill="${bgColorInput.value}"/>
+${rects}
+</svg>`;
+
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const link = document.createElement('a');
+            link.download = 'qrcode.svg';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast('SVGをダウンロードしました');
+        }
+
+        // === Copy to clipboard ===
+        async function copyQR() {
+            try {
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                showToast('クリップボードにコピーしました');
+            } catch (e) {
+                showToast('コピーに失敗しました');
+            }
+        }
+
+        // === Toast ===
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // === Init ===
+        generate();
+    </script>
+</body>
+</html>
