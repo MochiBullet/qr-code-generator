@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
         :root {
             --bg: #06080c;
             --bg-card: #0d1117;
@@ -19,7 +18,6 @@
             --accent-purple: #c084fc;
             --accent-green: #4ade80;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--bg);
@@ -27,7 +25,6 @@
             min-height: 100vh;
             line-height: 1.6;
         }
-
         body::before {
             content: '';
             position: fixed;
@@ -83,11 +80,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .btn-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn {
             display: inline-flex;
             align-items: center;
@@ -123,7 +116,6 @@
             flex-direction: column;
             gap: 16px;
         }
-
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -138,10 +130,8 @@
             letter-spacing: 0.08em;
             margin-bottom: 14px;
         }
-
         .field { margin-bottom: 14px; }
         .field:last-child { margin-bottom: 0; }
-
         label {
             display: block;
             font-size: 12px;
@@ -149,8 +139,7 @@
             color: var(--text-muted);
             margin-bottom: 5px;
         }
-
-        input[type="text"], input[type="url"], select, textarea {
+        input[type="text"], input[type="url"], input[type="email"], input[type="tel"], select, textarea {
             width: 100%;
             padding: 9px 12px;
             background: rgba(255,255,255,0.04);
@@ -173,6 +162,40 @@
             padding-right: 28px;
         }
         select option { background: #161b22; }
+
+        /* === Content Type Tabs === */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 14px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab {
+            padding: 7px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 12px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .tab:hover { background: rgba(255,255,255,0.04); color: var(--text-muted); }
+        .tab.active {
+            background: rgba(108,156,255,0.12);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
 
         /* Color */
         .color-row { display: flex; align-items: center; gap: 8px; }
@@ -202,39 +225,37 @@
         }
         .color-hex:focus { border-color: var(--primary); }
 
-        /* Toggle */
-        .gradient-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .toggle {
-            position: relative;
-            width: 40px;
-            height: 22px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 11px;
+        /* === Gradient Pill Toggle === */
+        .pill-toggle {
+            display: inline-flex;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .pill-opt {
+            padding: 7px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: inherit;
             cursor: pointer;
-            transition: background 0.2s;
-            flex-shrink: 0;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            transition: all 0.15s;
         }
-        .toggle.active { background: var(--primary); }
-        .toggle::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 18px;
-            height: 18px;
-            background: #fff;
-            border-radius: 50%;
-            transition: transform 0.2s;
+        .pill-opt.active {
+            background: rgba(108,156,255,0.15);
+            color: var(--primary);
+            font-weight: 600;
         }
-        .toggle.active::after { transform: translateX(18px); }
 
-        .gradient-colors { display: none; gap: 8px; margin-top: 10px; }
-        .gradient-colors.show { display: flex; }
+        .gradient-options { display: none; }
+        .gradient-options.show { display: block; }
+        .gradient-colors { display: flex; gap: 8px; margin-bottom: 10px; }
         .gradient-colors .color-col { flex: 1; }
         .gradient-colors label { font-size: 11px; }
-
-        .direction-row { display: none; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-        .direction-row.show { display: flex; }
+        .direction-row { display: flex; flex-wrap: wrap; gap: 5px; }
         .dir-btn {
             width: 34px;
             height: 34px;
@@ -252,7 +273,7 @@
         .dir-btn:hover { border-color: var(--text-dim); }
         .dir-btn.active { border-color: var(--primary); background: rgba(108,156,255,0.1); color: var(--primary); }
 
-        /* Upload */
+        /* === Logo Upload === */
         .upload-area {
             border: 2px dashed var(--border);
             border-radius: 10px;
@@ -263,20 +284,59 @@
             position: relative;
         }
         .upload-area:hover { border-color: var(--text-dim); background: rgba(255,255,255,0.02); }
-        .upload-area.has-image { border-color: var(--accent-green); background: rgba(74,222,128,0.04); }
+        .upload-area.has-image {
+            border-style: solid;
+            border-color: var(--accent-green);
+            background: rgba(74,222,128,0.04);
+            cursor: default;
+        }
         .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .upload-area.has-image input[type="file"] { display: none; }
         .upload-icon { font-size: 24px; margin-bottom: 4px; }
         .upload-text { font-size: 11px; color: var(--text-dim); }
-        .upload-preview { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-bottom: 4px; }
-        .remove-image {
-            display: inline-block;
+        .upload-preview-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .upload-preview-img {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        .upload-info {
+            text-align: left;
+        }
+        .upload-filename {
+            font-size: 12px;
+            color: var(--text);
+            font-weight: 500;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .btn-remove {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             margin-top: 4px;
+            padding: 4px 10px;
+            border: 1px solid rgba(255,68,68,0.3);
+            border-radius: 6px;
+            background: rgba(255,68,68,0.08);
+            color: #f66;
             font-size: 11px;
-            color: #f44;
-            cursor: pointer;
-            background: none;
-            border: none;
+            font-weight: 500;
             font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-remove:hover {
+            background: rgba(255,68,68,0.18);
+            border-color: rgba(255,68,68,0.5);
         }
 
         /* Range */
@@ -301,6 +361,19 @@
         .range-row input[type="range"] { flex: 1; }
         .range-value { font-size: 12px; color: var(--text-muted); font-family: monospace; min-width: 32px; text-align: right; }
 
+        /* Logo warning */
+        .logo-warn {
+            margin-top: 8px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: rgba(255,200,50,0.08);
+            border: 1px solid rgba(255,200,50,0.2);
+            font-size: 11px;
+            color: #ffc832;
+            display: none;
+        }
+        .logo-warn.show { display: block; }
+
         /* Toast */
         .toast {
             position: fixed;
@@ -319,7 +392,6 @@
             pointer-events: none;
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
         .footer {
             text-align: center;
             padding: 12px;
@@ -339,15 +411,9 @@
             <div class="preview-actions">
                 <div class="preview-title">QR Code Generator</div>
                 <div class="btn-row">
-                    <button class="btn btn-primary" onclick="downloadQR()">
-                        <span>📥</span> PNG
-                    </button>
-                    <button class="btn" onclick="downloadSVGBtn()">
-                        <span>📄</span> SVG
-                    </button>
-                    <button class="btn" onclick="copyQR()">
-                        <span>📋</span> Copy
-                    </button>
+                    <button class="btn btn-primary" onclick="downloadQR()">📥 PNG</button>
+                    <button class="btn" onclick="downloadSVGBtn()">📄 SVG</button>
+                    <button class="btn" onclick="copyQR()">📋 Copy</button>
                 </div>
             </div>
         </div>
@@ -355,14 +421,108 @@
 
     <!-- Scrollable Settings -->
     <div class="settings">
-        <!-- Content -->
+        <!-- Content with Tabs -->
         <div class="card">
             <div class="card-title">Content</div>
-            <div class="field">
-                <label>テキスト / URL</label>
-                <textarea id="qrText" placeholder="https://example.com">https://mochi-bullet-magazine.vercel.app/</textarea>
+            <div class="tabs" id="contentTabs">
+                <button class="tab active" data-tab="url">URL</button>
+                <button class="tab" data-tab="text">テキスト</button>
+                <button class="tab" data-tab="contact">連絡先</button>
+                <button class="tab" data-tab="wifi">WiFi</button>
+                <button class="tab" data-tab="email">Email</button>
+                <button class="tab" data-tab="phone">電話</button>
             </div>
-            <div class="field">
+
+            <!-- URL -->
+            <div class="tab-panel active" id="panel-url">
+                <div class="field">
+                    <label>URL</label>
+                    <input type="url" id="inUrl" placeholder="https://example.com" value="https://mochi-bullet-magazine.vercel.app/">
+                </div>
+            </div>
+
+            <!-- Text -->
+            <div class="tab-panel" id="panel-text">
+                <div class="field">
+                    <label>テキスト</label>
+                    <textarea id="inText" placeholder="自由にテキストを入力"></textarea>
+                </div>
+            </div>
+
+            <!-- Contact (vCard) -->
+            <div class="tab-panel" id="panel-contact">
+                <div class="field">
+                    <label>氏名</label>
+                    <input type="text" id="vcName" placeholder="山田 太郎">
+                </div>
+                <div class="field">
+                    <label>電話番号</label>
+                    <input type="tel" id="vcPhone" placeholder="090-1234-5678">
+                </div>
+                <div class="field">
+                    <label>メールアドレス</label>
+                    <input type="email" id="vcEmail" placeholder="taro@example.com">
+                </div>
+                <div class="field">
+                    <label>会社名</label>
+                    <input type="text" id="vcOrg" placeholder="株式会社サンプル">
+                </div>
+                <div class="field">
+                    <label>URL</label>
+                    <input type="url" id="vcUrl" placeholder="https://example.com">
+                </div>
+                <div class="field">
+                    <label>住所</label>
+                    <input type="text" id="vcAddr" placeholder="東京都渋谷区...">
+                </div>
+            </div>
+
+            <!-- WiFi -->
+            <div class="tab-panel" id="panel-wifi">
+                <div class="field">
+                    <label>SSID（ネットワーク名）</label>
+                    <input type="text" id="wfSsid" placeholder="MyWiFi">
+                </div>
+                <div class="field">
+                    <label>パスワード</label>
+                    <input type="text" id="wfPass" placeholder="password123">
+                </div>
+                <div class="field">
+                    <label>暗号化方式</label>
+                    <select id="wfEnc">
+                        <option value="WPA">WPA/WPA2</option>
+                        <option value="WEP">WEP</option>
+                        <option value="nopass">なし（オープン）</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="tab-panel" id="panel-email">
+                <div class="field">
+                    <label>宛先</label>
+                    <input type="email" id="emTo" placeholder="taro@example.com">
+                </div>
+                <div class="field">
+                    <label>件名</label>
+                    <input type="text" id="emSubject" placeholder="お問い合わせ">
+                </div>
+                <div class="field">
+                    <label>本文</label>
+                    <textarea id="emBody" placeholder="メール本文"></textarea>
+                </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="tab-panel" id="panel-phone">
+                <div class="field">
+                    <label>電話番号</label>
+                    <input type="tel" id="inPhone" placeholder="090-1234-5678">
+                </div>
+            </div>
+
+            <!-- EC Level -->
+            <div class="field" style="margin-top:14px;">
                 <label>誤り訂正レベル</label>
                 <select id="ecLevel">
                     <option value="L">L (7%) — 小さいQR</option>
@@ -384,10 +544,12 @@
                 </div>
             </div>
             <div class="field">
-                <div class="gradient-toggle">
-                    <div class="toggle" id="gradToggle"></div>
-                    <label style="margin:0;cursor:pointer;" onclick="document.getElementById('gradToggle').click()">グラデーション</label>
+                <!-- Pill toggle for solid/gradient -->
+                <div class="pill-toggle" id="colorMode">
+                    <button class="pill-opt active" data-mode="solid">単色</button>
+                    <button class="pill-opt" data-mode="gradient">グラデーション</button>
                 </div>
+
                 <div id="solidColor">
                     <label>QRコードの色</label>
                     <div class="color-row">
@@ -395,28 +557,31 @@
                         <input type="text" class="color-hex" id="fgHex" value="#000000">
                     </div>
                 </div>
-                <div class="gradient-colors" id="gradColors">
-                    <div class="color-col">
-                        <label>カラー 1</label>
-                        <div class="color-row">
-                            <input type="color" id="grad1" value="#6C9CFF">
-                            <input type="text" class="color-hex" id="grad1Hex" value="#6C9CFF">
+
+                <div class="gradient-options" id="gradOpts">
+                    <div class="gradient-colors">
+                        <div class="color-col">
+                            <label>カラー 1</label>
+                            <div class="color-row">
+                                <input type="color" id="grad1" value="#6C9CFF">
+                                <input type="text" class="color-hex" id="grad1Hex" value="#6C9CFF">
+                            </div>
+                        </div>
+                        <div class="color-col">
+                            <label>カラー 2</label>
+                            <div class="color-row">
+                                <input type="color" id="grad2" value="#c084fc">
+                                <input type="text" class="color-hex" id="grad2Hex" value="#c084fc">
+                            </div>
                         </div>
                     </div>
-                    <div class="color-col">
-                        <label>カラー 2</label>
-                        <div class="color-row">
-                            <input type="color" id="grad2" value="#c084fc">
-                            <input type="text" class="color-hex" id="grad2Hex" value="#c084fc">
-                        </div>
+                    <div class="direction-row" id="dirRow">
+                        <button class="dir-btn" data-dir="to-b" title="上→下">↓</button>
+                        <button class="dir-btn" data-dir="to-r" title="左→右">→</button>
+                        <button class="dir-btn active" data-dir="to-br" title="左上→右下">↘</button>
+                        <button class="dir-btn" data-dir="to-bl" title="右上→左下">↙</button>
+                        <button class="dir-btn" data-dir="radial" title="放射状">◎</button>
                     </div>
-                </div>
-                <div class="direction-row" id="dirRow">
-                    <button class="dir-btn" data-dir="to-b" title="上→下">↓</button>
-                    <button class="dir-btn" data-dir="to-r" title="左→右">→</button>
-                    <button class="dir-btn active" data-dir="to-br" title="左上→右下">↘</button>
-                    <button class="dir-btn" data-dir="to-bl" title="右上→左下">↙</button>
-                    <button class="dir-btn" data-dir="radial" title="放射状">◎</button>
                 </div>
             </div>
         </div>
@@ -436,9 +601,10 @@
             <div class="field">
                 <label>ロゴサイズ</label>
                 <div class="range-row">
-                    <input type="range" id="logoSize" min="10" max="40" value="22">
-                    <span class="range-value" id="logoSizeVal">22%</span>
+                    <input type="range" id="logoSize" min="8" max="30" value="20">
+                    <span class="range-value" id="logoSizeVal">20%</span>
                 </div>
+                <div class="logo-warn" id="logoWarn">ロゴが大きすぎると読み取れない場合があります。誤り訂正レベルを自動でHに設定しました。</div>
             </div>
             <div class="field">
                 <label>角丸</label>
@@ -484,7 +650,6 @@
 
     <script>
         // === Elements ===
-        const qrText = document.getElementById('qrText');
         const ecLevel = document.getElementById('ecLevel');
         const bgColorInput = document.getElementById('bgColor');
         const bgHexInput = document.getElementById('bgHex');
@@ -494,9 +659,8 @@
         const grad1HexInput = document.getElementById('grad1Hex');
         const grad2Input = document.getElementById('grad2');
         const grad2HexInput = document.getElementById('grad2Hex');
-        const gradToggleEl = document.getElementById('gradToggle');
+        const gradOpts = document.getElementById('gradOpts');
         const solidColor = document.getElementById('solidColor');
-        const gradColors = document.getElementById('gradColors');
         const dirRow = document.getElementById('dirRow');
         const logoInput = document.getElementById('logoInput');
         const uploadArea = document.getElementById('uploadArea');
@@ -507,6 +671,7 @@
         const logoRadiusVal = document.getElementById('logoRadiusVal');
         const logoPaddingRange = document.getElementById('logoPadding');
         const logoPaddingVal = document.getElementById('logoPaddingVal');
+        const logoWarn = document.getElementById('logoWarn');
         const qrSizeRange = document.getElementById('qrSize');
         const qrSizeVal = document.getElementById('qrSizeVal');
         const qrMarginRange = document.getElementById('qrMargin');
@@ -518,13 +683,83 @@
         let useGradient = false;
         let gradDirection = 'to-br';
         let logoImage = null;
+        let activeTab = 'url';
+
+        // === Content Tabs ===
+        document.getElementById('contentTabs').addEventListener('click', (e) => {
+            const btn = e.target.closest('.tab');
+            if (!btn) return;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            activeTab = btn.dataset.tab;
+            document.getElementById('panel-' + activeTab).classList.add('active');
+            generate();
+        });
+
+        // Listen to all content inputs
+        document.querySelectorAll('.tab-panel input, .tab-panel textarea, .tab-panel select').forEach(el => {
+            el.addEventListener('input', generate);
+        });
+
+        // Build QR text from active tab
+        function getQRText() {
+            switch (activeTab) {
+                case 'url':
+                    return document.getElementById('inUrl').value || ' ';
+                case 'text':
+                    return document.getElementById('inText').value || ' ';
+                case 'contact': {
+                    const name = document.getElementById('vcName').value;
+                    const phone = document.getElementById('vcPhone').value;
+                    const email = document.getElementById('vcEmail').value;
+                    const org = document.getElementById('vcOrg').value;
+                    const url = document.getElementById('vcUrl').value;
+                    const addr = document.getElementById('vcAddr').value;
+                    if (!name && !phone && !email) return ' ';
+                    let parts = ['BEGIN:VCARD', 'VERSION:3.0'];
+                    if (name) { parts.push('FN:' + name); parts.push('N:' + name.split(' ').reverse().join(';') + ';;;'); }
+                    if (phone) parts.push('TEL:' + phone);
+                    if (email) parts.push('EMAIL:' + email);
+                    if (org) parts.push('ORG:' + org);
+                    if (url) parts.push('URL:' + url);
+                    if (addr) parts.push('ADR:;;' + addr + ';;;;');
+                    parts.push('END:VCARD');
+                    return parts.join('\n');
+                }
+                case 'wifi': {
+                    const ssid = document.getElementById('wfSsid').value;
+                    const pass = document.getElementById('wfPass').value;
+                    const enc = document.getElementById('wfEnc').value;
+                    if (!ssid) return ' ';
+                    return 'WIFI:T:' + enc + ';S:' + ssid + ';P:' + pass + ';;';
+                }
+                case 'email': {
+                    const to = document.getElementById('emTo').value;
+                    const subj = document.getElementById('emSubject').value;
+                    const body = document.getElementById('emBody').value;
+                    if (!to) return ' ';
+                    let mailto = 'mailto:' + to;
+                    const params = [];
+                    if (subj) params.push('subject=' + encodeURIComponent(subj));
+                    if (body) params.push('body=' + encodeURIComponent(body));
+                    if (params.length) mailto += '?' + params.join('&');
+                    return mailto;
+                }
+                case 'phone': {
+                    const phone = document.getElementById('inPhone').value;
+                    return phone ? 'tel:' + phone : ' ';
+                }
+                default:
+                    return ' ';
+            }
+        }
 
         // === Color sync ===
         function syncColor(picker, hex) {
             picker.addEventListener('input', () => { hex.value = picker.value; generate(); });
             hex.addEventListener('input', () => {
-                const v = hex.value;
-                if (/^#[0-9a-fA-F]{6}$/.test(v)) { picker.value = v; generate(); }
+                if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) { picker.value = hex.value; generate(); }
             });
             hex.addEventListener('blur', () => { hex.value = picker.value; });
         }
@@ -533,24 +768,26 @@
         syncColor(grad1Input, grad1HexInput);
         syncColor(grad2Input, grad2HexInput);
 
-        // === Gradient toggle ===
-        gradToggleEl.addEventListener('click', () => {
-            useGradient = !useGradient;
-            gradToggleEl.classList.toggle('active', useGradient);
+        // === Color Mode Pill Toggle ===
+        document.getElementById('colorMode').addEventListener('click', (e) => {
+            const btn = e.target.closest('.pill-opt');
+            if (!btn) return;
+            document.querySelectorAll('.pill-opt').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            useGradient = btn.dataset.mode === 'gradient';
             solidColor.style.display = useGradient ? 'none' : 'block';
-            gradColors.classList.toggle('show', useGradient);
-            dirRow.classList.toggle('show', useGradient);
+            gradOpts.classList.toggle('show', useGradient);
             generate();
         });
 
         // === Direction buttons ===
-        dirRow.querySelectorAll('.dir-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                dirRow.querySelector('.active')?.classList.remove('active');
-                btn.classList.add('active');
-                gradDirection = btn.dataset.dir;
-                generate();
-            });
+        dirRow.addEventListener('click', (e) => {
+            const btn = e.target.closest('.dir-btn');
+            if (!btn) return;
+            dirRow.querySelector('.active')?.classList.remove('active');
+            btn.classList.add('active');
+            gradDirection = btn.dataset.dir;
+            generate();
         });
 
         // === Logo upload ===
@@ -562,20 +799,27 @@
                 const img = new Image();
                 img.onload = () => {
                     logoImage = img;
-                    uploadArea.classList.add('has-image');
-                    uploadContent.innerHTML =
-                        '<img src="' + ev.target.result + '" class="upload-preview">' +
-                        '<div class="upload-text">' + file.name + '</div>' +
-                        '<button class="remove-image" onclick="removeLogo(event)">\u00d7 削除</button>';
-                    if (ecLevel.value === 'L' || ecLevel.value === 'M') {
-                        ecLevel.value = 'Q';
-                    }
+                    logoImage._src = ev.target.result;
+                    logoImage._name = file.name;
+                    showLogoPreview();
                     generate();
                 };
                 img.src = ev.target.result;
             };
             reader.readAsDataURL(file);
         });
+
+        function showLogoPreview() {
+            uploadArea.classList.add('has-image');
+            uploadContent.innerHTML =
+                '<div class="upload-preview-row">' +
+                    '<img src="' + logoImage._src + '" class="upload-preview-img">' +
+                    '<div class="upload-info">' +
+                        '<div class="upload-filename">' + logoImage._name + '</div>' +
+                        '<button class="btn-remove" onclick="removeLogo(event)">✕ 削除</button>' +
+                    '</div>' +
+                '</div>';
+        }
 
         function removeLogo(e) {
             e.stopPropagation();
@@ -586,23 +830,44 @@
             uploadContent.innerHTML =
                 '<div class="upload-icon">🖼️</div>' +
                 '<div class="upload-text">タップして画像を選択</div>';
+            logoWarn.classList.remove('show');
             generate();
         }
 
         // === Range sliders ===
-        logoSizeRange.addEventListener('input', () => { logoSizeVal.textContent = logoSizeRange.value + '%'; generate(); });
+        logoSizeRange.addEventListener('input', () => {
+            logoSizeVal.textContent = logoSizeRange.value + '%';
+            autoAdjustEC();
+            generate();
+        });
         logoRadiusRange.addEventListener('input', () => { logoRadiusVal.textContent = logoRadiusRange.value + 'px'; generate(); });
         logoPaddingRange.addEventListener('input', () => { logoPaddingVal.textContent = logoPaddingRange.value + 'px'; generate(); });
         qrSizeRange.addEventListener('input', () => { qrSizeVal.textContent = qrSizeRange.value; generate(); });
         qrMarginRange.addEventListener('input', () => { qrMarginVal.textContent = qrMarginRange.value; generate(); });
-
-        qrText.addEventListener('input', generate);
         ecLevel.addEventListener('change', generate);
+
+        // Auto-adjust error correction when logo present
+        function autoAdjustEC() {
+            if (!logoImage) { logoWarn.classList.remove('show'); return; }
+            const pct = parseInt(logoSizeRange.value);
+            // Logo area as fraction of total = pct^2 / 10000
+            // H can handle 30%, Q can handle 25%
+            if (pct > 22) {
+                ecLevel.value = 'H';
+                logoWarn.classList.add('show');
+            } else if (pct > 15) {
+                if (ecLevel.value === 'L' || ecLevel.value === 'M') ecLevel.value = 'Q';
+                logoWarn.classList.remove('show');
+            } else {
+                if (ecLevel.value === 'L') ecLevel.value = 'M';
+                logoWarn.classList.remove('show');
+            }
+        }
 
         // === QR Generation ===
         function generate() {
-            const text = qrText.value || ' ';
-            const ec = ecLevel.value; // 'L', 'M', 'Q', 'H' — pass string directly
+            const text = getQRText();
+            const ec = ecLevel.value;
 
             let qr;
             try {
@@ -610,17 +875,15 @@
                 qr.addData(text);
                 qr.make();
             } catch (e) {
-                // Auto type failed, try increasing versions
                 for (let v = 5; v <= 40; v++) {
                     try {
                         qr = qrcode(v, ec);
                         qr.addData(text);
                         qr.make();
                         break;
-                    } catch (e2) { qr = null; continue; }
+                    } catch (e2) { qr = null; }
                 }
             }
-
             if (!qr) return;
 
             const moduleCount = qr.getModuleCount();
@@ -660,24 +923,43 @@
             } else {
                 fillStyle = fgColorInput.value;
             }
-
             ctx.fillStyle = fillStyle;
 
-            // Draw modules
+            // Compute logo exclusion zone
+            let logoZone = null;
+            if (logoImage) {
+                const logoPct = parseInt(logoSizeRange.value) / 100;
+                const logoDrawSize = size * logoPct;
+                const pad = parseInt(logoPaddingRange.value);
+                const zoneHalf = (logoDrawSize + pad * 2) / 2;
+                const cx = size / 2;
+                const cy = size / 2;
+                logoZone = { x1: cx - zoneHalf, y1: cy - zoneHalf, x2: cx + zoneHalf, y2: cy + zoneHalf };
+            }
+
+            // Draw modules (skip those under logo zone)
             for (let row = 0; row < moduleCount; row++) {
                 for (let col = 0; col < moduleCount; col++) {
                     if (qr.isDark(row, col)) {
                         const x = (col + margin) * cellSize;
                         const y = (row + margin) * cellSize;
-                        ctx.fillRect(x, y, Math.ceil(cellSize), Math.ceil(cellSize));
+                        const cs = Math.ceil(cellSize);
+
+                        // Skip modules entirely inside logo zone
+                        if (logoZone &&
+                            x + cs > logoZone.x1 && x < logoZone.x2 &&
+                            y + cs > logoZone.y1 && y < logoZone.y2) {
+                            continue;
+                        }
+                        ctx.fillRect(x, y, cs, cs);
                     }
                 }
             }
 
             // Logo overlay
             if (logoImage) {
-                const logoPercent = parseInt(logoSizeRange.value) / 100;
-                const logoDrawSize = size * logoPercent;
+                const logoPct = parseInt(logoSizeRange.value) / 100;
+                const logoDrawSize = size * logoPct;
                 const padding = parseInt(logoPaddingRange.value);
                 const radius = parseInt(logoRadiusRange.value);
                 const lx = (size - logoDrawSize) / 2;
@@ -696,10 +978,7 @@
                 ctx.restore();
             }
 
-            // Update wrap bg
             qrWrap.style.background = bgColorInput.value;
-
-            // Store for SVG export
             canvas._qrData = { qr, moduleCount, margin, size };
         }
 
@@ -788,7 +1067,6 @@
             }
         }
 
-        // === Toast ===
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.textContent = msg;
