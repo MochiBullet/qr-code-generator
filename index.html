@@ -357,6 +357,45 @@
         .density-hint.warn { color: #ffc832; }
         .density-hint.danger { color: #f66; }
         .vcardOnly.hide { display: none; }
+
+        /* SNS / Share buttons */
+        .share-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .share-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+        .share-row { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn-sns {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 7px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .btn-sns:active { transform: scale(0.95); }
+        .btn-x { background: #000; border: 1px solid #333; }
+        .btn-x:hover { background: #1a1a1a; }
+        .btn-line { background: #06C755; }
+        .btn-line:hover { background: #05b34c; }
+        .btn-facebook { background: #1877F2; }
+        .btn-facebook:hover { background: #1466d8; }
+        .btn-share { background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text-muted); }
+        .btn-share:hover { background: rgba(255,255,255,0.12); color: var(--text); }
     </style>
 </head>
 <body>
@@ -372,6 +411,14 @@
                     <button class="btn btn-primary" onclick="downloadQR()">📥 PNG</button>
                     <button class="btn" onclick="downloadSVGBtn()">📄 SVG</button>
                     <button class="btn" onclick="copyQR()">📋 Copy</button>
+                </div>
+                <div class="share-section">
+                    <div class="share-row">
+                        <button class="btn-sns btn-x" onclick="shareX()">𝕏 ポスト</button>
+                        <button class="btn-sns btn-line" onclick="shareLine()">LINE</button>
+                        <button class="btn-sns btn-facebook" onclick="shareFB()">Facebook</button>
+                        <button class="btn-sns btn-share" onclick="shareNative()">🔗 共有</button>
+                    </div>
                 </div>
                 <div class="density-bar">
                     <div class="density-track"><div class="density-fill" id="densityFill"></div></div>
@@ -946,6 +993,59 @@
                 showToast('クリップボードにコピーしました');
             } catch (e) {
                 showToast('コピーに失敗しました');
+            }
+        }
+
+        // === SNS Share (QR image) ===
+        const SITE_URL = 'https://mochibullet.github.io/qr-code-generator/';
+
+        async function getQRBlob() {
+            return new Promise(r => canvas.toBlob(r, 'image/png'));
+        }
+
+        function shareX() {
+            const text = 'QRコードを作成しました！ #QRCode';
+            const url = SITE_URL;
+            window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text + '\n' + url), '_blank');
+        }
+
+        function shareLine() {
+            const text = 'QRコードを作成しました！\n' + SITE_URL;
+            window.open('https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(SITE_URL) + '&text=' + encodeURIComponent(text), '_blank');
+        }
+
+        function shareFB() {
+            window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(SITE_URL), '_blank');
+        }
+
+        async function shareNative() {
+            // Web Share API — share QR image + site link
+            if (navigator.share) {
+                try {
+                    const blob = await getQRBlob();
+                    const file = new File([blob], 'qrcode.png', { type: 'image/png' });
+                    await navigator.share({
+                        title: 'QR Code Generator',
+                        text: 'QRコードを作成しました！',
+                        url: SITE_URL,
+                        files: [file]
+                    });
+                    return;
+                } catch (e) {
+                    // files not supported, try without
+                    try {
+                        await navigator.share({
+                            title: 'QR Code Generator',
+                            text: 'QRコードを作成しました！',
+                            url: SITE_URL
+                        });
+                        return;
+                    } catch (e2) { /* user cancelled */ }
+                }
+            } else {
+                // Fallback: copy URL
+                await navigator.clipboard.writeText(SITE_URL);
+                showToast('リンクをコピーしました');
             }
         }
 
