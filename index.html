@@ -273,72 +273,6 @@
         .dir-btn:hover { border-color: var(--text-dim); }
         .dir-btn.active { border-color: var(--primary); background: rgba(108,156,255,0.1); color: var(--primary); }
 
-        /* === Logo Upload === */
-        .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-            position: relative;
-        }
-        .upload-area:hover { border-color: var(--text-dim); background: rgba(255,255,255,0.02); }
-        .upload-area.has-image {
-            border-style: solid;
-            border-color: var(--accent-green);
-            background: rgba(74,222,128,0.04);
-            cursor: default;
-        }
-        .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-        .upload-area.has-image input[type="file"] { display: none; }
-        .upload-icon { font-size: 24px; margin-bottom: 4px; }
-        .upload-text { font-size: 11px; color: var(--text-dim); }
-        .upload-preview-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-        }
-        .upload-preview-img {
-            width: 44px;
-            height: 44px;
-            border-radius: 6px;
-            object-fit: cover;
-        }
-        .upload-info {
-            text-align: left;
-        }
-        .upload-filename {
-            font-size: 12px;
-            color: var(--text);
-            font-weight: 500;
-            max-width: 140px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .btn-remove {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 4px;
-            padding: 4px 10px;
-            border: 1px solid rgba(255,68,68,0.3);
-            border-radius: 6px;
-            background: rgba(255,68,68,0.08);
-            color: #f66;
-            font-size: 11px;
-            font-weight: 500;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .btn-remove:hover {
-            background: rgba(255,68,68,0.18);
-            border-color: rgba(255,68,68,0.5);
-        }
-
         /* Range */
         input[type="range"] {
             width: 100%;
@@ -361,18 +295,6 @@
         .range-row input[type="range"] { flex: 1; }
         .range-value { font-size: 12px; color: var(--text-muted); font-family: monospace; min-width: 32px; text-align: right; }
 
-        /* Logo warning */
-        .logo-warn {
-            margin-top: 8px;
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: rgba(255,200,50,0.08);
-            border: 1px solid rgba(255,200,50,0.2);
-            font-size: 11px;
-            color: #ffc832;
-            display: none;
-        }
-        .logo-warn.show { display: block; }
 
         /* Toast */
         .toast {
@@ -634,42 +556,6 @@
             </div>
         </div>
 
-        <!-- Logo -->
-        <div class="card">
-            <div class="card-title">Logo</div>
-            <div class="field">
-                <div class="upload-area" id="uploadArea">
-                    <input type="file" id="logoInput" accept="image/*">
-                    <div id="uploadContent">
-                        <div class="upload-icon">🖼️</div>
-                        <div class="upload-text">タップして画像を選択</div>
-                    </div>
-                </div>
-            </div>
-            <div class="field">
-                <label>ロゴサイズ</label>
-                <div class="range-row">
-                    <input type="range" id="logoSize" min="8" max="30" value="20">
-                    <span class="range-value" id="logoSizeVal">20%</span>
-                </div>
-                <div class="logo-warn" id="logoWarn">ロゴが大きすぎると読み取れない場合があります。誤り訂正レベルを自動でHに設定しました。</div>
-            </div>
-            <div class="field">
-                <label>角丸</label>
-                <div class="range-row">
-                    <input type="range" id="logoRadius" min="0" max="50" value="8">
-                    <span class="range-value" id="logoRadiusVal">8px</span>
-                </div>
-            </div>
-            <div class="field">
-                <label>余白</label>
-                <div class="range-row">
-                    <input type="range" id="logoPadding" min="0" max="20" value="6">
-                    <span class="range-value" id="logoPaddingVal">6px</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Size -->
         <div class="card">
             <div class="card-title">Size</div>
@@ -714,16 +600,6 @@
         const gradOpts = document.getElementById('gradOpts');
         const solidColor = document.getElementById('solidColor');
         const dirRow = document.getElementById('dirRow');
-        const logoInput = document.getElementById('logoInput');
-        const uploadArea = document.getElementById('uploadArea');
-        const uploadContent = document.getElementById('uploadContent');
-        const logoSizeRange = document.getElementById('logoSize');
-        const logoSizeVal = document.getElementById('logoSizeVal');
-        const logoRadiusRange = document.getElementById('logoRadius');
-        const logoRadiusVal = document.getElementById('logoRadiusVal');
-        const logoPaddingRange = document.getElementById('logoPadding');
-        const logoPaddingVal = document.getElementById('logoPaddingVal');
-        const logoWarn = document.getElementById('logoWarn');
         const qrSizeRange = document.getElementById('qrSize');
         const qrSizeVal = document.getElementById('qrSizeVal');
         const qrMarginRange = document.getElementById('qrMargin');
@@ -739,7 +615,6 @@
 
         let useGradient = false;
         let gradDirection = 'to-br';
-        let logoImage = null;
         let activeTab = 'url';
         let contactFmt = 'mecard';
         const MIN_MODULE_PX = 6; // 最小ドットサイズ（px）
@@ -880,79 +755,10 @@
             generate();
         });
 
-        // === Logo upload ===
-        logoInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const img = new Image();
-                img.onload = () => {
-                    logoImage = img;
-                    logoImage._src = ev.target.result;
-                    logoImage._name = file.name;
-                    showLogoPreview();
-                    generate();
-                };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-
-        function showLogoPreview() {
-            uploadArea.classList.add('has-image');
-            uploadContent.innerHTML =
-                '<div class="upload-preview-row">' +
-                    '<img src="' + logoImage._src + '" class="upload-preview-img">' +
-                    '<div class="upload-info">' +
-                        '<div class="upload-filename">' + logoImage._name + '</div>' +
-                        '<button class="btn-remove" onclick="removeLogo(event)">✕ 削除</button>' +
-                    '</div>' +
-                '</div>';
-        }
-
-        function removeLogo(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            logoImage = null;
-            logoInput.value = '';
-            uploadArea.classList.remove('has-image');
-            uploadContent.innerHTML =
-                '<div class="upload-icon">🖼️</div>' +
-                '<div class="upload-text">タップして画像を選択</div>';
-            logoWarn.classList.remove('show');
-            generate();
-        }
-
         // === Range sliders ===
-        logoSizeRange.addEventListener('input', () => {
-            logoSizeVal.textContent = logoSizeRange.value + '%';
-            autoAdjustEC();
-            generate();
-        });
-        logoRadiusRange.addEventListener('input', () => { logoRadiusVal.textContent = logoRadiusRange.value + 'px'; generate(); });
-        logoPaddingRange.addEventListener('input', () => { logoPaddingVal.textContent = logoPaddingRange.value + 'px'; generate(); });
         qrSizeRange.addEventListener('input', () => { qrSizeVal.textContent = qrSizeRange.value; generate(); });
         qrMarginRange.addEventListener('input', () => { qrMarginVal.textContent = qrMarginRange.value; generate(); });
         ecLevel.addEventListener('change', generate);
-
-        // Auto-adjust error correction when logo present
-        function autoAdjustEC() {
-            if (!logoImage) { logoWarn.classList.remove('show'); return; }
-            const pct = parseInt(logoSizeRange.value);
-            // Logo area as fraction of total = pct^2 / 10000
-            // H can handle 30%, Q can handle 25%
-            if (pct > 22) {
-                ecLevel.value = 'H';
-                logoWarn.classList.add('show');
-            } else if (pct > 15) {
-                if (ecLevel.value === 'L' || ecLevel.value === 'M') ecLevel.value = 'Q';
-                logoWarn.classList.remove('show');
-            } else {
-                if (ecLevel.value === 'L') ecLevel.value = 'M';
-                logoWarn.classList.remove('show');
-            }
-        }
 
         // === Density Indicator ===
         function updateDensity(moduleCount, cellSize) {
@@ -1057,75 +863,19 @@
             }
             ctx.fillStyle = fillStyle;
 
-            // Compute logo exclusion zone
-            let logoZone = null;
-            if (logoImage) {
-                const logoPct = parseInt(logoSizeRange.value) / 100;
-                const logoDrawSize = size * logoPct;
-                const pad = parseInt(logoPaddingRange.value);
-                const zoneHalf = (logoDrawSize + pad * 2) / 2;
-                const cx = size / 2;
-                const cy = size / 2;
-                logoZone = { x1: cx - zoneHalf, y1: cy - zoneHalf, x2: cx + zoneHalf, y2: cy + zoneHalf };
-            }
-
-            // Draw modules (skip those under logo zone)
+            // Draw modules
             for (let row = 0; row < moduleCount; row++) {
                 for (let col = 0; col < moduleCount; col++) {
                     if (qr.isDark(row, col)) {
                         const x = (col + margin) * cellSize;
                         const y = (row + margin) * cellSize;
-                        const cs = Math.ceil(cellSize);
-
-                        // Skip modules entirely inside logo zone
-                        if (logoZone &&
-                            x + cs > logoZone.x1 && x < logoZone.x2 &&
-                            y + cs > logoZone.y1 && y < logoZone.y2) {
-                            continue;
-                        }
-                        ctx.fillRect(x, y, cs, cs);
+                        ctx.fillRect(x, y, Math.ceil(cellSize), Math.ceil(cellSize));
                     }
                 }
             }
 
-            // Logo overlay
-            if (logoImage) {
-                const logoPct = parseInt(logoSizeRange.value) / 100;
-                const logoDrawSize = size * logoPct;
-                const padding = parseInt(logoPaddingRange.value);
-                const radius = parseInt(logoRadiusRange.value);
-                const lx = (size - logoDrawSize) / 2;
-                const ly = (size - logoDrawSize) / 2;
-
-                // Background behind logo
-                ctx.fillStyle = bgColorInput.value;
-                roundRect(ctx, lx - padding, ly - padding, logoDrawSize + padding * 2, logoDrawSize + padding * 2, radius + padding / 2);
-                ctx.fill();
-
-                // Clip and draw
-                ctx.save();
-                roundRect(ctx, lx, ly, logoDrawSize, logoDrawSize, radius);
-                ctx.clip();
-                ctx.drawImage(logoImage, lx, ly, logoDrawSize, logoDrawSize);
-                ctx.restore();
-            }
-
             qrWrap.style.background = bgColorInput.value;
             canvas._qrData = { qr, moduleCount, margin, size };
-        }
-
-        function roundRect(ctx, x, y, w, h, r) {
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.lineTo(x + w - r, y);
-            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-            ctx.lineTo(x + w, y + h - r);
-            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-            ctx.lineTo(x + r, y + h);
-            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-            ctx.lineTo(x, y + r);
-            ctx.quadraticCurveTo(x, y, x + r, y);
-            ctx.closePath();
         }
 
         // === Download PNG ===
