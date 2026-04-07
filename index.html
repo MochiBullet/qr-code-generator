@@ -522,8 +522,14 @@
         <div class="card">
             <div class="card-title">Colors</div>
             <div class="field">
-                <label>背景色</label>
-                <div class="color-row">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    背景色
+                    <label style="display:flex;align-items:center;gap:4px;margin:0;cursor:pointer;font-size:11px;color:var(--text-dim);">
+                        <input type="checkbox" id="bgTransparent" style="width:14px;height:14px;accent-color:var(--primary);">
+                        透過
+                    </label>
+                </label>
+                <div class="color-row" id="bgColorRow">
                     <input type="color" id="bgColor" value="#ffffff">
                     <input type="text" class="color-hex" id="bgHex" value="#ffffff">
                 </div>
@@ -635,6 +641,8 @@
         const ecLevel = document.getElementById('ecLevel');
         const bgColorInput = document.getElementById('bgColor');
         const bgHexInput = document.getElementById('bgHex');
+        const bgTransparent = document.getElementById('bgTransparent');
+        const bgColorRow = document.getElementById('bgColorRow');
         const fgColorInput = document.getElementById('fgColor');
         const fgHexInput = document.getElementById('fgHex');
         const grad1Input = document.getElementById('grad1');
@@ -777,6 +785,13 @@
         syncColor(grad1Input, grad1HexInput);
         syncColor(grad2Input, grad2HexInput);
 
+        // === Background transparent toggle ===
+        bgTransparent.addEventListener('change', () => {
+            bgColorRow.style.opacity = bgTransparent.checked ? '0.3' : '1';
+            bgColorRow.style.pointerEvents = bgTransparent.checked ? 'none' : 'auto';
+            generate();
+        });
+
         // === Color Mode Pill Toggle ===
         document.getElementById('colorMode').addEventListener('click', (e) => {
             const btn = e.target.closest('.pill-opt');
@@ -878,8 +893,12 @@
             canvas.height = size;
 
             // Background
-            ctx.fillStyle = bgColorInput.value;
-            ctx.fillRect(0, 0, size, size);
+            if (bgTransparent.checked) {
+                ctx.clearRect(0, 0, size, size);
+            } else {
+                ctx.fillStyle = bgColorInput.value;
+                ctx.fillRect(0, 0, size, size);
+            }
 
             // Foreground fill
             let fillStyle;
@@ -918,7 +937,11 @@
                 }
             }
 
-            qrWrap.style.background = bgColorInput.value;
+            if (bgTransparent.checked) {
+                qrWrap.style.background = 'repeating-conic-gradient(#808080 0% 25%, #fff 0% 50%) 0 0 / 16px 16px';
+            } else {
+                qrWrap.style.background = bgColorInput.value;
+            }
             canvas._qrData = { qr, moduleCount, margin, size };
         }
 
@@ -971,7 +994,8 @@
                 }
             }
 
-            const svg = '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '">\n' + gradDef + '\n<rect width="' + size + '" height="' + size + '" fill="' + bgColorInput.value + '"/>\n' + rects + '\n</svg>';
+            const bgRect = bgTransparent.checked ? '' : '<rect width="' + size + '" height="' + size + '" fill="' + bgColorInput.value + '"/>';
+            const svg = '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '">\n' + gradDef + '\n' + bgRect + '\n' + rects + '\n</svg>';
 
             const blob = new Blob([svg], { type: 'image/svg+xml' });
             const link = document.createElement('a');
