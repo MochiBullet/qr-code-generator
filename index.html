@@ -34,16 +34,24 @@
             z-index: 9999;
         }
 
-        /* === Preview Section === */
+        /* === Preview Section (fixed bottom) === */
         .preview-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 20px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(6, 8, 12, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 12px 16px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
         }
         .preview-inner {
+            max-width: 600px;
+            margin: 0 auto;
             display: flex;
-            flex-direction: column;
             align-items: center;
             gap: 14px;
         }
@@ -56,18 +64,18 @@
         }
         #qrCanvas {
             display: block;
-            width: 180px;
-            height: 180px;
+            width: 100px;
+            height: 100px;
             image-rendering: pixelated;
         }
         .preview-actions {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
         }
-        .btn-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+        .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn {
             display: inline-flex;
             align-items: center;
@@ -98,7 +106,7 @@
         .settings {
             max-width: 600px;
             margin: 0 auto;
-            padding: 16px 16px 40px;
+            padding: 16px 16px 180px;
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -340,7 +348,6 @@
             color: var(--text-dim);
             margin-top: 2px;
             transition: color 0.3s;
-            text-align: center;
         }
         .density-hint.warn { color: #ffc832; }
         .density-hint.danger { color: #f66; }
@@ -358,7 +365,7 @@
             color: var(--text-dim);
             font-weight: 500;
         }
-        .share-row { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+        .share-row { display: flex; gap: 5px; flex-wrap: wrap; }
         .btn-sns {
             display: inline-flex;
             align-items: center;
@@ -587,37 +594,37 @@
             </div>
         </div>
 
-        <!-- Preview & Export -->
-        <div class="preview-section">
-            <div class="preview-inner">
-                <div class="qr-canvas-wrap" id="qrWrap" style="background:#fff">
-                    <canvas id="qrCanvas" width="400" height="400"></canvas>
-                </div>
-                <div class="preview-actions">
-                    <div class="btn-row">
-                        <button class="btn btn-primary" onclick="downloadQR()">📥 PNG</button>
-                        <button class="btn" onclick="downloadSVGBtn()">📄 SVG</button>
-                        <button class="btn" onclick="copyQR()">📋 Copy</button>
-                    </div>
-                    <div class="share-section">
-                        <div class="share-row">
-                            <button class="btn-sns btn-x" onclick="shareX()">𝕏 ポスト</button>
-                            <button class="btn-sns btn-line" onclick="shareLine()">LINE</button>
-                            <button class="btn-sns btn-facebook" onclick="shareFB()">Facebook</button>
-                            <button class="btn-sns btn-share" onclick="shareNative()">🔗 共有</button>
-                        </div>
-                    </div>
-                    <div class="density-bar">
-                        <div class="density-track"><div class="density-fill" id="densityFill"></div></div>
-                        <span class="density-label" id="densityLabel">--</span>
-                    </div>
-                    <div class="density-hint" id="densityHint"></div>
-                </div>
-            </div>
-        </div>
-
         <div class="footer">
             Made by <a href="https://mochi-bullet-magazine.vercel.app/" target="_blank">MochiBullet</a>
+        </div>
+    </div>
+
+    <!-- Fixed Preview Bar -->
+    <div class="preview-section">
+        <div class="preview-inner">
+            <div class="qr-canvas-wrap" id="qrWrap" style="background:#fff">
+                <canvas id="qrCanvas" width="400" height="400"></canvas>
+            </div>
+            <div class="preview-actions">
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="downloadQR()">📥 PNG</button>
+                    <button class="btn" onclick="downloadSVGBtn()">📄 SVG</button>
+                    <button class="btn" onclick="copyQR()">📋 Copy</button>
+                </div>
+                <div class="share-section">
+                    <div class="share-row">
+                        <button class="btn-sns btn-x" onclick="shareX()">𝕏 ポスト</button>
+                        <button class="btn-sns btn-line" onclick="shareLine()">LINE</button>
+                        <button class="btn-sns btn-facebook" onclick="shareFB()">Facebook</button>
+                        <button class="btn-sns btn-share" onclick="shareNative()">🔗 共有</button>
+                    </div>
+                </div>
+                <div class="density-bar">
+                    <div class="density-track"><div class="density-fill" id="densityFill"></div></div>
+                    <span class="density-label" id="densityLabel">--</span>
+                </div>
+                <div class="density-hint" id="densityHint"></div>
+            </div>
         </div>
     </div>
 
